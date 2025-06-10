@@ -3,8 +3,6 @@ import os
 import math
 from unittest import case
 
-import customtkinter as ctk
-
 class App:
     def __init__(self):
         self.recipes_path = "recipes"
@@ -182,7 +180,7 @@ class UserControl:
         self.app = App()
         self.run = True
         self.command("")
-    def command(self, command:str)->str|None:
+    def command(self)->str|None:
         self.run = True
         print("材料計算機")
         # user_control = UserControl()
@@ -235,18 +233,7 @@ class UserControl:
             except KeyboardInterrupt:
                 self.run = False
 
-
-
-class GUI:
-    def __init__(self):
-        self.root = ctk.CTk()
-        self.root.title("Minecraft-Material-Computer")
-        self.root.resizable(False, False)
-        self.root.geometry("500x500")
-        self.page:str|int
-        self.root.mainloop()
 if __name__ == "__main__":
     user = UserControl()
-    #gui = GUI()
 
 
