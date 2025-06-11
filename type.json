@@ -3,8 +3,12 @@
 	"campfire_cooking",
 	"crafting_shaped",
 	"crafting_shapeless",
+	"crafting_transmute",
+	"crafting_special_*",
+	"crafting_decorated_pot",
 	"smelting",
-	"smithing",
+	"smithing_transform",
+	"smithing_trim",
 	"smoking",
 	"stonecutting"
 ]

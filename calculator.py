@@ -1,7 +1,7 @@
 import json
 import os
 import math
-from unittest import case
+import ast
 
 class App:
     def __init__(self):
@@ -20,17 +20,30 @@ class App:
         with open(path, "r", encoding="utf-8") as f:
             __recipe = json.load(f)
         return __recipe
-    @staticmethod
-    def get_all_dir_item(dirs:list) -> dict[str,str]:
-        all_item = {}
+    def get_all_dir_item(self, dirs:list):
+        all_items = {}
         for _dir in dirs:
-            for item in os.listdir("recipes/"+_dir):
-                all_item[item.split(".")[0]] = _dir
-        return all_item
+            path = f"recipes/{_dir}"
+            for recipe_name in os.listdir(path):
+                recipe:dict = self.load_recipe(f"{path}/{recipe_name}")
+                try:
+                    result = recipe["result"]
+                    if type(result) == dict:
+                        item_id = result["id"].split(":")[1]
+                    else:
+                        item_id = result
+                except KeyError:
+                    continue
+                if item_id not in all_items:
+                    all_items[item_id] = [f"{path}/{recipe_name}"]
+        return all_items
 
     @staticmethod
     def get_recipe_data(recipe_dict:dict):
-        recipe_type = recipe_dict["type"]
+        try:
+            recipe_type = recipe_dict["type"]
+        except KeyError:
+            raise KeyError(f"Recipe type not found in {recipe_dict}")
         match recipe_type:
             case "minecraft:crafting_shaped":
                 key:dict[str,str] = recipe_dict["key"]
@@ -72,6 +85,14 @@ class App:
                 return {ingredient: 1}, 1
             case _:
                 raise Exception("recipe format error")
+    @staticmethod
+    def get_first_recipe(recipes:dict) -> dict:
+        recipe_keys = recipes.keys()
+        first_key = None
+        for i in recipe_keys:
+            first_key = i
+            break
+        return recipes[first_key]
 
     def load(self):
         self.dirs = self.get_recipe_dirs()
@@ -82,23 +103,15 @@ class App:
 
     def find_recipe(self, item_id):
         recipe_data = {}
-        first_data = {}
         if item_id in self.all_item:
-            item_dir = self.all_item[item_id]
-            recipe_data[item_id] = self.load_recipe(os.path.join(self.recipes_path, item_dir, item_id + ".json"))
-            first_data = recipe_data[item_id]
-        blacklist = ["crafting_shaped", "crafting_shapeless"]
-        for i in self.crafting_items:
-            if i in blacklist:
-                continue
-            if (new_recipe_id := f"{item_id}_{i}") in self.all_item:
-                item_dir = self.all_item[new_recipe_id]
-                recipe_data[new_recipe_id] = self.load_recipe(os.path.join(self.recipes_path, item_dir, item_id+".json"))
-                if first_data == {}:
-                    first_data = recipe_data[new_recipe_id]
-        if recipe_data == {}:
+            item_recipes = self.all_item[item_id]
+            for recipe_path in item_recipes:
+                recipe = self.load_recipe(recipe_path)
+                _type = recipe["type"]
+                recipe_data[_type] = recipe
+            return recipe_data
+        else:
             return None
-        return first_data
 
     def clear(self):
         self.crafting_items = {}
@@ -136,12 +149,11 @@ class App:
         if __user_input == "confirm":
             output_items = {}
             input_items = {}
-            for key in self.crafting_items.keys():
-                if ":" in key:
-                    key = key.split(":")[1]
+            for item in self.crafting_items.keys():
+                if ":" in item:
+                    item = item.split(":")[1]
                 #讀取資料
-                mod_name = self.all_item[key]
-                __recipe = self.load_recipe(os.path.join(self.recipes_path, mod_name, key+".json"))
+                __recipe = self.load_recipe(self.all_item[item][0])
                 try:
                     __item_count, __result_count = self.get_recipe_data(__recipe)
                 except KeyError as err:
@@ -149,14 +161,14 @@ class App:
                     print(f"Key '{__recipe}' not found")
                     continue
                 #計算需要合成的最少數量
-                crafting_item_count = self.crafting_items[key]
+                crafting_item_count = self.crafting_items[item]
                 least_times = math.ceil(crafting_item_count/__result_count)
                 least_count = least_times*__result_count
                 #添加物絣進入輸出字典
                 try:
-                    output_items[key] += least_count
+                    output_items[item] += least_count
                 except KeyError:
-                    output_items[key] = least_count
+                    output_items[item] = least_count
                 #添加最少合成材料進新的合成字典
                 for i in __item_count.keys():
                     new_i = i
@@ -179,7 +191,7 @@ class UserControl:
     def __init__(self):
         self.app = App()
         self.run = True
-        self.command("")
+        self.command()
     def command(self)->str|None:
         self.run = True
         print("材料計算機")
@@ -218,7 +230,8 @@ class UserControl:
                     if recipe is not None:
                         print(recipe)
                     try:
-                        items, result_count = self.app.get_recipe_data(self.app.find_recipe(_id))
+                        first_recipe = self.app.get_first_recipe(self.app.find_recipe(_id))
+                        items, result_count = self.app.get_recipe_data(first_recipe)
                     except TypeError:
                         print("Invalid recipe")
                         continue
