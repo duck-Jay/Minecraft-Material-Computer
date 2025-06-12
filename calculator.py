@@ -44,6 +44,12 @@ class App:
         except KeyError:
             raise KeyError(f"Recipe type not found in {recipe_dict}")
         match recipe_type:
+            case "minecraft:blasting":
+                ingredient = recipe_dict["ingredient"]
+                return {ingredient: 1}, 1
+            case "minecraft:campfire_cooking":
+                ingredient = recipe_dict["ingredient"]
+                return {ingredient: 1}, 1
             case "minecraft:crafting_shaped":
                 key:dict[str,str] = recipe_dict["key"]
                 pattern:list = recipe_dict["pattern"]
@@ -69,6 +75,14 @@ class App:
                         __items[i] = 1
                 __result_count = recipe_dict["result"]["count"]
                 return __items, __result_count
+            #------------------
+            #crafting_transmute
+            #crafting_special_*
+            #crafting_decorated_pot
+            #------------------
+            case "minecraft:smelting":
+                ingredient:dict = recipe_dict["ingredient"]
+                return {ingredient: 1}, 1
             case "minecraft:smithing_transform":
                 base = recipe_dict["base"]
                 template = recipe_dict["template"]
@@ -76,12 +90,13 @@ class App:
                 __items = {base: 1, template: 1, addition: 1}
                 __result_count = recipe_dict["result"]["count"]
                 return __items, __result_count
-            case "minecraft:smelting":
-                ingredient:dict = recipe_dict["ingredient"]
-                return {ingredient: 1}, 1
-            case "minecraft:blasting":
+            case "minecraft:smoking":
                 ingredient = recipe_dict["ingredient"]
                 return {ingredient: 1}, 1
+            case "minecraft:stonecutting":
+                ingredient = recipe_dict["ingredient"]
+                __result_count = recipe_dict["result"]["count"]
+                return {ingredient: 1}, __result_count
             case _:
                 raise Exception("recipe format error")
     @staticmethod
