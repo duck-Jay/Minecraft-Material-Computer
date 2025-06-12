@@ -1,6 +1,13 @@
 import json
 import os
 import math
+import zipfile
+
+
+def unzip_file(file_path:str):
+    with zipfile.ZipFile(file_path) as f:
+        f.extractall()
+        print("Done!\n")
 
 class App:
     def __init__(self):
@@ -261,6 +268,10 @@ class UserControl:
                 self.run = False
 
 if __name__ == "__main__":
+    if "recipes" not in os.listdir(os.getcwd()):
+        print("recipe folder not found!")
+        print("unzipping recipe folder...")
+        unzip_file("recipes.zip")
     user = UserControl()
 
 
