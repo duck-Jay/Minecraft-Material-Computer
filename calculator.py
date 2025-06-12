@@ -1,7 +1,6 @@
 import json
 import os
 import math
-import ast
 
 class App:
     def __init__(self):
@@ -73,12 +72,12 @@ class App:
             case "minecraft:smithing_transform":
                 base = recipe_dict["base"]
                 template = recipe_dict["template"]
-                __items = {base: 1,
-                                template: 1}
+                addition = recipe_dict["addition"]
+                __items = {base: 1, template: 1, addition: 1}
                 __result_count = recipe_dict["result"]["count"]
                 return __items, __result_count
             case "minecraft:smelting":
-                ingredient = recipe_dict["ingredient"]
+                ingredient:dict = recipe_dict["ingredient"]
                 return {ingredient: 1}, 1
             case "minecraft:blasting":
                 ingredient = recipe_dict["ingredient"]
