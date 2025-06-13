@@ -9,7 +9,7 @@ def unzip_file(file_path:str):
         f.extractall()
         print("Done!\n")
 
-class App:
+class Calculator:
     def __init__(self):
         self.recipes_path = "recipes"
 
@@ -140,16 +140,31 @@ class App:
     def add_crafting_items(self, item_id:str,quantity:int):
         if item_id.find(":") != -1:
             item_id = item_id.split(":")[1]
-        if quantity == 0:
-            quantity = 1
+
         if item_id not in self.all_item:
             print(f"Invalid parameters '{item_id}'")
+            return
+        if item_id in self.crafting_items:
+            items_count = self.crafting_items[item_id]
+        else:
+            items_count = 0
+        if items_count + quantity < 0:
+            print(f"Item {item_id} cannot be less than 0\nPlease increase the quantity")
             return
         if item_id not in self.crafting_items:
             self.crafting_items[item_id] = quantity
         else:
             self.crafting_items[item_id] += quantity
         print(f"now '{item_id}' is crafting {self.crafting_items[item_id]}")
+
+    def remove_crafting_items(self, item_id:str):
+        if item_id.find(":") != -1:
+            item_id = item_id.split(":")[1]
+        if item_id not in self.crafting_items:
+            print(f"Invalid parameters '{item_id}'")
+            return
+        else:
+            self.crafting_items.pop(item_id)
     @staticmethod
     def show(items:dict[str,int]):
         if len(items) == 0:
@@ -210,7 +225,7 @@ class App:
 
 class UserControl:
     def __init__(self):
-        self.app = App()
+        self.app = Calculator()
         self.run = True
         self.command()
     def command(self)->str|None:
@@ -225,10 +240,12 @@ class UserControl:
                     self.app.clear()
                     print("Done!")
                     continue
+
                 elif user_input == "count":
                     self.app.calculate_total_material()
                     print("Done!")
                     continue
+
                 elif "add" in user_input:
                     try:
                         _, _id, _quantity = user_input.split(" ")
@@ -238,10 +255,12 @@ class UserControl:
                     self.app.add_crafting_items(_id, int(_quantity))
                     print("Done!")
                     continue
+
                 elif user_input == "show":
                     self.app.show(self.app.crafting_items)
                     print("Done!")
                     continue
+
                 elif "find" in user_input:
                     _, _id = user_input.split(" ")[0:2]
                     if len(user_input.split(" ")) > 2:
@@ -258,7 +277,15 @@ class UserControl:
                         continue
                     print(f"{items}  x{result_count}")
                     print(f"from -{self.app.all_item[_id]}-")
+                    print("Done!")
                     continue
+
+                elif "rm" in user_input:
+                    _, _id = user_input.split(" ")[0:2]
+                    self.app.remove_crafting_items(_id)
+                    print("Done!")
+                    continue
+
                 elif user_input == "exit":
                     self.run = False
                     print("Done!")
